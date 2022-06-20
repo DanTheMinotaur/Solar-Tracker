@@ -10,14 +10,6 @@ struct LightSensor {
     return "Left: " + String(left) + "; Right: " + String(right) 
       + "; Up: " + String(up) + "; Down: " + String(down);
   }
-
-  boolean isLeft() {
-    return left > right;
-  }
-
-  boolean isRight() {
-    return right > left;
-  }
 };
 
 LightSensor lightReadings() {

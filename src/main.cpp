@@ -21,8 +21,15 @@ void setup() {
 }
 
 void loop() {
-  delay(1000);
+  delay(5000);
   // moveToLight();
-  lightReadings();
-  readLightLevel();
+  // lightReadings();
+  // readLightLevel();
+  // delay(3000);
+  // moveY(5);
+  // readLightLevel();
+  // delay(3000);
+  // moveY(60);
+  // readLightLevel();
+  moveToLight();
 }

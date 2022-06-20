@@ -2,10 +2,15 @@
 #define SENSORS_H_
 #include <BH1750.h>
 
-typedef struct {
-    int left, right, up, down;
-    bool isLeft();
-    bool isRight();
+typedef struct LightSensor {
+  int left, right, up, down;
+  boolean isLeft() {
+    return left > right;
+  }
+
+  boolean isRight() {
+    return right > left;
+  }
 } LightSensor;
 
 LightSensor lightReadings();

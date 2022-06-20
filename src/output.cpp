@@ -5,15 +5,6 @@
 LiquidCrystal_I2C lcd(0x27,16,2);
 Servo x_servo, y_servo;
 
-/*
-Round values from light sensors
-
-SERVO_MAX_LEFT = 10
-SERVO_MAX_RIGHT = 170
-
-Read light intesity
-*/
-
 void lcdPrint(String val) {
     lcd.print(val);
 }
@@ -37,22 +28,67 @@ int percentage(int num1, int num2) {
   return 100 * min(num1, num2) / max(num1, num2);
 }
 
-void moveX(int dest_angle) {
-  Serial.println("Moving X to " + dest_angle);
-  int curr_angle = x_servo.read();
-  int increment = dest_angle >= curr_angle ? 5 : -5;
-  while(curr_angle != dest_angle ) {
-    curr_angle += increment;
-    x_servo.write(curr_angle);
+void moveServo(Servo s, int destAngle, int minAngle = 10, int maxAngle = 170) {
+  int currAngle = s.read();
+  int increment = destAngle >= currAngle ? 5 : -5;
+  while(currAngle != destAngle ) {
+    currAngle += increment;
+    s.write(currAngle);
     delay(100);
-    if (curr_angle <= 10 || curr_angle >= 170) {
+    if (currAngle <= minAngle || currAngle >= maxAngle) {
       break;
     }
   }
-  Serial.println("Movement Complete");
 }
 
-void moveToLight() {
+void moveX(int destAngle) {
+  Serial.println("Moving X to " + String(destAngle));
+  moveServo(x_servo, destAngle);
+}
+
+void moveY(int destAngle) {
+  Serial.println("Moving Y to " + String(destAngle));
+  moveServo(y_servo, destAngle, 1, 100);
+}
+
+void findLightIntensity() {
+  float startLightLevel = readLightLevel();
+  int servoStart = y_servo.read();
+  moveY(servoStart + 5);
+  delay(1000);
+  float lightReading = readLightLevel();
+  int move; // 0 = move down; 1 = move up
+
+  if (lightReading <= startLightLevel) {
+    moveY(servoStart - 5);
+    delay(1000);
+    lightReading = readLightLevel();
+    if (lightReading <= startLightLevel) {
+        moveY(servoStart);
+        return;
+    } else {
+        move = 0;
+    }
+  } else {
+    move = 1;
+  }
+
+  float lastLightReading;
+  while(true) {
+    int moveTo = (move) ? 5 : -5;
+    moveY(y_servo.read() + moveTo);
+    delay(800);
+    if (lastLightReading == 0) {
+      lastLightReading = readLightLevel();
+    } else {
+      if (lastLightReading <= readLightLevel()) {
+        break;
+      }
+    }
+  }
+}
+
+void findLightAngle() {
   LightSensor ls = lightReadings();
   int angle;
   if (ls.isLeft()) {
@@ -64,5 +100,9 @@ void moveToLight() {
   int result = angle + 5 / 2;
   result -= result % 5;
   moveX(result);
-  Serial.println("Movement Complete");
+}
+
+void moveToLight() {
+  findLightAngle();
+  findLightIntensity();  
 }
